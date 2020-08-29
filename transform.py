@@ -43,7 +43,10 @@ class Transformation:
                 # calculating GDP growth on yearly basis
                 gdp_india[gdp_india_yrs[i]][key] = round(((gdp_india[gdp_india_yrs[i]]['GDP_in_rs_cr'] -gdp_india[gdp_india_yrs[i-1]]['GDP_in_rs_cr'])/gdp_india[gdp_india_yrs[i-1]]['GDP_in_rs_cr'])*100,2)
 
-        pgdb = PostgreSQL("economydb", "postgres", "postgres", "localhost", "5432")
+        df = pd.DataFrame(gdp_india, columns=())
+
+
+        pgdb = PostgreSQL("postgres", "postgres", "localhost", "chakradb", "5432")
         pgdb.insert_into_db(gdp_india)
         return gdp_india
 
@@ -72,8 +75,7 @@ class Transformation:
 
         # Convert list of dict into pandas df
         df = pd.DataFrame(air_list, columns=air_dict.keys())
-
-        pgdb = PostgreSQL("pollutiondb", "postgres", "postgres", "localhost", "5432")
+        pgdb = PostgreSQL("postgres", "postgres", "localhost", "pollutiondb", "5432")
         pgdb.insert_into_db(df)
 
         return df
