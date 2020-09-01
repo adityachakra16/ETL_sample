@@ -1,11 +1,16 @@
 {
 	"data_sources": {
-		"api": {
-			"Pollution": "https://api.openaq.org/v1/latest?country=IN&limit=10000",
-			"Economy": "https://api.data.gov.in/resource/07d49df4-233f-4898-92db-e6855d4dd94c?api-key=579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b&format=json&offset=0&limit=100"
-		},
 		"csv": {
 			"CryptoMarkets": "crypto-markets.csv"
+		}
+		"fda":{
+			"Therapy": "faers_ascii_2020Q2/ASCII/THER20Q2.txt"
+			"Indication": "faers_ascii_2020Q2/ASCII/INDI20Q2.txt"
+			"Drug": "faers_ascii_2020Q2/ASCII/DRUG20Q2.txt"
+			"Demographic": "faers_ascii_2020Q2/ASCII/DEMO20Q2.txt"
+			"Reaction": "faers_ascii_2020Q2/ASCII/REAC20Q2.txt"
+			"Outcome": "faers_ascii_2020Q2/ASCII/OUTC20Q2.txt"
+			"Report_Sources": "faers_ascii_2020Q2/ASCII/RPSR20Q2.txt"
 		}
 	}
 }
