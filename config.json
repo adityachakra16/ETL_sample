@@ -2,14 +2,14 @@
 	"data_sources": {
 		"csv": {
 			"CryptoMarkets": "crypto-markets.csv"
-		}
+		},
 		"fda":{
-			"Therapy": "faers_ascii_2020Q2/ASCII/THER20Q2.txt"
-			"Indication": "faers_ascii_2020Q2/ASCII/INDI20Q2.txt"
-			"Drug": "faers_ascii_2020Q2/ASCII/DRUG20Q2.txt"
-			"Demographic": "faers_ascii_2020Q2/ASCII/DEMO20Q2.txt"
-			"Reaction": "faers_ascii_2020Q2/ASCII/REAC20Q2.txt"
-			"Outcome": "faers_ascii_2020Q2/ASCII/OUTC20Q2.txt"
+			"Therapy": "faers_ascii_2020Q2/ASCII/THER20Q2.txt",
+			"Indication": "faers_ascii_2020Q2/ASCII/INDI20Q2.txt",
+			"Drug": "faers_ascii_2020Q2/ASCII/DRUG20Q2.txt",
+			"Demographic": "faers_ascii_2020Q2/ASCII/DEMO20Q2.txt",
+			"Reaction": "faers_ascii_2020Q2/ASCII/REAC20Q2.txt",
+			"Outcome": "faers_ascii_2020Q2/ASCII/OUTC20Q2.txt",
 			"Report_Sources": "faers_ascii_2020Q2/ASCII/RPSR20Q2.txt"
 		}
 	}
