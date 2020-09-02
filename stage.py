@@ -24,6 +24,7 @@ class StageDBConnection(object):
 
 class Stage:
     def __init__(self, dataSource, dataSet):
+        self.schemaname = "Staging"
         stagedb = StageDBConnection()
         extractObj = Extract()
         self.qh = QueryHandler()
@@ -38,7 +39,7 @@ class Stage:
             else:
                 print ("Data Source not supported")
             funcName = "stage"
-            getattr(self, funcName)("Reaction")  #TODO: Hashmap to track db and tables
+            getattr(self, funcName)("Demographic")  #TODO: Hashmap to track db and tables
         except Exception as e:
             print (e)
         finally:
@@ -48,7 +49,7 @@ class Stage:
 
     def stage(self, tablename):
         with self.conn.cursor() as cursor:
-            psycopg2.extras.execute_batch(cursor, self.qh.insert_data(tablename, self.columns), self.data)
+            psycopg2.extras.execute_batch(cursor, self.qh.insert_data(self.schemaname, tablename, self.columns), self.data)
 
         print(f"{len(self.data)} records inserted successfully into mobile table")
 
@@ -100,19 +101,20 @@ class QueryHandler:
         query = f"ALTER TABLE {schema}.{tablename} ADD FOREIGN KEY {attr_str}"
         return query
 
-    def create_trigger(self, tablename, trigger_func):
-        query = f"CREATE TRIGGER t BEFORE INSERT OR UPDATE OR DELETE ON {tablename}\
+    def create_trigger(self, schemaname, tablename, trigger_func):
+
+        query = f"CREATE TRIGGER t BEFORE INSERT OR UPDATE OR DELETE ON {schemaname}.{tablename}\
                 FOR EACH ROW EXECUTE PROCEDURE {trigger_func}"
 
         return query
 
 
-    def insert_data(self, table, columns):
+    def insert_data(self, schema, table, columns):
         attr_str = ""
         for col in columns[:len(columns)-1]:
             attr_str += str(col) + ", "
         attr_str += columns[len(columns)-1]
-        query = f"INSERT INTO {table} ({attr_str}) VALUES (" + "%s,"*(len(columns)-1) + "%s)"
+        query = f"INSERT INTO {schema}.{table} ({attr_str}) VALUES (" + "%s,"*(len(columns)-1) + "%s)"
 
         return query
 
