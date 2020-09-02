@@ -54,7 +54,11 @@ class Stage:
 
 
 class QueryHandler:
-    def create_table(self, table_structure:dict):
+    def create_schema(self, schemaname):
+        query = f"CREATE SCHEMA {schemaname}"
+        return query
+
+    def create_table(self, schema, table_structure:dict):
         tablename = table_structure["table_name"]
         attr_str = ""
         for column in table_structure["columns"]:
@@ -81,10 +85,10 @@ class QueryHandler:
 
             attr_str += ")"
 
-        query = f"CREATE TABLE {tablename} ({attr_str});"
+        query = f"CREATE TABLE {schema}.{tablename} ({attr_str});"
         return query
 
-    def insert_foreign_key(self, table_structure:dict):
+    def insert_foreign_key(self, schema, table_structure:dict):
         if len(table_structure["foreign_key"]) == 0:
             return None
 
@@ -93,8 +97,15 @@ class QueryHandler:
         for fk in table_structure["foreign_key"]:
             attr_str += fk
 
-        query = f"ALTER TABLE {tablename} ADD FOREIGN KEY {attr_str}"
+        query = f"ALTER TABLE {schema}.{tablename} ADD FOREIGN KEY {attr_str}"
         return query
+
+    def create_trigger(self, tablename, trigger_func):
+        query = f"CREATE TRIGGER t BEFORE INSERT OR UPDATE OR DELETE ON {tablename}\
+                FOR EACH ROW EXECUTE PROCEDURE {trigger_func}"
+
+        return query
+
 
     def insert_data(self, table, columns):
         attr_str = ""

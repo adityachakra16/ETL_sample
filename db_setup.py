@@ -25,16 +25,20 @@ class DBSetup:
 
 
     def create_schema(self, schema):
+        schemaname = "Staging"
         cursor = self.conn.cursor()
-
+        query = self.qh.create_schema(schemaname)
+        cursor.execute(query)
+        print (f"Schema {schemaname} created")
         for k, v in schema.items():
-            query = self.qh.create_table(v)
+            query = self.qh.create_table(schemaname, v)
             if query:
                 cursor.execute(query)
                 print (f"{k} table created")
 
+
         for k, v in schema.items():
-            query = self.qh.insert_foreign_key(v)
+            query = self.qh.insert_foreign_key(schemaname, v)
             if query:
                 cursor.execute(query)
                 print (f"Foreign keys for {k} inserted")
