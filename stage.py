@@ -15,7 +15,8 @@ class StageDBConnection(object):
             try:
                 self.conn = psycopg2.connect(dbname=db_name, user=user,
                                     password = password, host = host)
-                print (f"Connected to {db_name}")
+                if self.conn:
+                    print (f"Connected to {db_name}")
             except Exception as e:
                 print (e)
 
@@ -56,8 +57,17 @@ class Stage:
 
 class QueryHandler:
     def create_schema(self, schemaname):
-        query = f"CREATE SCHEMA {schemaname}"
-        return query
+        return f"CREATE SCHEMA IF NOT EXISTS {schemaname}"
+
+    def get_key_insertion_attr(self, table_structure, key):
+        attr_str = ""
+        idx = 1
+        for pk in table_structure[key]:
+            attr_str += pk
+            if idx != len(table_structure[key]):
+                attr_str += ","
+            idx += 1
+        return attr_str
 
     def create_table(self, schema, table_structure:dict):
         tablename = table_structure["table_name"]
@@ -66,47 +76,25 @@ class QueryHandler:
             attr_str += column + ", "
 
         if len(table_structure["primary_key"]) > 0:
-            attr_str += "PRIMARY KEY ("
-            idx = 1
-            for pk in table_structure["primary_key"]:
-                attr_str += pk
-                if idx != len(table_structure["primary_key"]):
-                    attr_str += ","
-                idx += 1
-            attr_str += ")"
+            attr_str += "PRIMARY KEY (" + self.get_key_insertion_attr(table_structure, "primary_key") + ")"
 
         if len(table_structure["unique"]) > 0:
-            attr_str += ", UNIQUE ("
-            idx = 1
-            for u in table_structure["unique"]:
-                attr_str += u
-                if idx != len(table_structure["unique"]):
-                    attr_str += ","
-                idx += 1
+            attr_str += ", UNIQUE (" + self.get_key_insertion_attr(table_structure, "unique") + ")"
 
-            attr_str += ")"
-
-        query = f"CREATE TABLE {schema}.{tablename} ({attr_str});"
-        return query
+        return f"CREATE TABLE IF NOT EXISTS {schema}.{tablename} ({attr_str});"
 
     def insert_foreign_key(self, schema, table_structure:dict):
         if len(table_structure["foreign_key"]) == 0:
             return None
 
         tablename = table_structure["table_name"]
-        attr_str = ""
-        for fk in table_structure["foreign_key"]:
-            attr_str += fk
+        attr_str = self.get_key_insertion_attr(table_structure, "foreign_key")
 
-        query = f"ALTER TABLE {schema}.{tablename} ADD FOREIGN KEY {attr_str}"
-        return query
+        return f"ALTER TABLE {schema}.{tablename} ADD FOREIGN KEY {attr_str}"
 
     def create_trigger(self, schemaname, tablename, trigger_func):
-
-        query = f"CREATE TRIGGER t BEFORE INSERT OR UPDATE OR DELETE ON {schemaname}.{tablename}\
+        return f"CREATE TRIGGER IF NOT EXISTS t BEFORE INSERT OR UPDATE OR DELETE ON {schemaname}.{tablename}\
                 FOR EACH ROW EXECUTE PROCEDURE {trigger_func}"
-
-        return query
 
 
     def insert_data(self, schema, table, columns):
@@ -114,9 +102,8 @@ class QueryHandler:
         for col in columns[:len(columns)-1]:
             attr_str += str(col) + ", "
         attr_str += columns[len(columns)-1]
-        query = f"INSERT INTO {schema}.{table} ({attr_str}) VALUES (" + "%s,"*(len(columns)-1) + "%s)"
+        return f"INSERT INTO {schema}.{table} ({attr_str}) VALUES (" + "%s,"*(len(columns)-1) + "%s)"
 
-        return query
 
     def retreive_data(self, table, columns):
         attr_str = ""
@@ -124,5 +111,14 @@ class QueryHandler:
             attr_str += str(col) + ", "
         attr_str += columns[len(columns)-1]
 
-        query = f"SELECT {attr_str} FROM {table}"
-        return query
+        return f"SELECT {attr_str} FROM {table}"
+
+
+    def delete_data(self, tablename, condition):
+        return f"DELETE FROM {tablename} WHERE {condition}"
+
+    def delete_table(self, tablename):
+        return f"DROP TABLE {tablename}"
+
+    def delete_schema(self, schemaname):
+        return f"DROP SCHEMA {schemaname} CASCADE"

@@ -2,8 +2,25 @@ from stage import QueryHandler
 from stage import StageDBConnection
 import psycopg2
 
+class Logging:
+    def __init__(self, query_handler, logschemaname, logtablename, logtable_structure, cursor, funcName):
+        self.funcName = funcName
+        self.qh = query_handler
+        cursor.execute(self.qh.create_schema(logschemaname))
+        print ("Logging schema created")
+        cursor.execute(self.qh.create_table(logtablename, logtable_structure))
+        print ("Logging table created")
+        #sql_file = open('sql/change_trigger.sql','r')
+        #cursor.execute(sql_file.read())
+        #sql_file.close()
+
+    def __call__(self, schemaname, tablename, cursor):
+        cursor.execute(self.qh.create_trigger(schemaname, tablename, self.funcName))
+        print (f"Change trigger created for {schemaname}.{tablename}")
+
+
 class DBSetup:
-    def __init__(self, schema, logging=None):
+    def __init__(self, schema, schemaname, logging=None):
         self.qh = QueryHandler()
         stagedb =  StageDBConnection()
         try:
@@ -11,7 +28,7 @@ class DBSetup:
             self.conn.autocommit = True
 
             funcName = "create_schema"
-            getattr(self, funcName)(schema, logging)
+            getattr(self, funcName)(schema, schemaname, logging)
         except Exception as e:
             print (e)
         finally:
@@ -24,35 +41,22 @@ class DBSetup:
         f.close()
 
 
-    def create_schema(self, schema, logging=None):
-
-        schemaname = "Staging"
+    def create_schema(self, schema, schemaname, logging_structure=None, migration_files=False, execute_later=False):
         cursor = self.conn.cursor()
-        query = self.qh.create_schema(schemaname)
-        cursor.execute(query)
+        cursor.execute(self.qh.create_schema(schemaname))
         print (f"Schema {schemaname} created")
 
-        if logging:
-            query = self.qh.create_schema("logging")
-            cursor.execute(query)
-            print ("Logging schema created")
-            query = self.qh.create_table("logging", logging)
-            cursor.execute(query)
-            print ("Logging table created")
+        log = None
+        if logging_structure:
+            log = Logging(self.qh, "Logging", "logging", logging_structure, cursor, "change_trigger()")
 
         for k, v in schema.items():
             query = self.qh.create_table(schemaname, v)
             if query:
                 cursor.execute(query)
                 print (f"{k} table created")
-
-                if logging:
-                    #sql_file = open('sql/change_trigger.sql','r')
-                    #cursor.execute(sql_file.read())
-                    #sql_file.close()
-                    query = self.qh.create_trigger(schemaname, v["table_name"], "change_trigger()")
-                    cursor.execute(query)
-                    print (f"Change trigger created for {schemaname}.{k}")
+                if log:
+                    log(schemaname, k, cursor)
 
         for k, v in schema.items():
             query = self.qh.insert_foreign_key(schemaname, v)

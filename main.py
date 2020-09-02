@@ -6,6 +6,6 @@ import json
 
 if __name__ == "__main__":
     schema = json.load(open('schema.json'))
-    setup = DBSetup(schema["Schema"]["Staging"], schema["Schema"]["Logging"])
-    #setup = DBSetup(tasks["Setup"], logging["t_history"])
+    setup = DBSetup(schema["Schema"]["Staging"], "Staging", logging=schema["Schema"]["Logging"])
     #Stage("fda", "Demographic")
+    # VARCHAR, COnforming tables, System change number
