@@ -29,6 +29,8 @@ class Stage:
         self.qh = QueryHandler()
         try:
             self.conn = stagedb.connect(db_name = "fdadb", user = "postgres", password = "postgres", host="localhost")
+            self.conn.autocommit = True
+
             if dataSource == 'csv':
                 self.columns, self.data = extractObj.getCSVData(dataSet)
             elif dataSource == 'fda':
@@ -47,18 +49,52 @@ class Stage:
     def stage(self, tablename):
         with self.conn.cursor() as cursor:
             psycopg2.extras.execute_batch(cursor, self.qh.insert_data(tablename, self.columns), self.data)
-        self.conn.commit()
 
         print(f"{len(self.data)} records inserted successfully into mobile table")
 
 
 class QueryHandler:
-    def create_table(self, tablename, **kwargs):
+    def create_table(self, table_structure:dict):
+        tablename = table_structure["table_name"]
         attr_str = ""
-        for col_name, props in kwargs.items():
-            attr_str += str(col_name) + " " + props + ","
+        for column in table_structure["columns"]:
+            attr_str += column + ", "
 
-        query = f"CREATE TABLE {tablename} ({attr_str})"
+        if len(table_structure["primary_key"]) > 0:
+            attr_str += "PRIMARY KEY ("
+            idx = 1
+            for pk in table_structure["primary_key"]:
+                attr_str += pk
+                if idx != len(table_structure["primary_key"]):
+                    attr_str += ","
+                idx += 1
+            attr_str += ")"
+
+        if len(table_structure["unique"]) > 0:
+            attr_str += ", UNIQUE ("
+            idx = 1
+            for u in table_structure["unique"]:
+                attr_str += u
+                if idx != len(table_structure["unique"]):
+                    attr_str += ","
+                idx += 1
+
+            attr_str += ")"
+
+        query = f"CREATE TABLE {tablename} ({attr_str});"
+        return query
+
+    def insert_foreign_key(self, table_structure:dict):
+        if len(table_structure["foreign_key"]) == 0:
+            return None
+
+        tablename = table_structure["table_name"]
+        attr_str = ""
+        for fk in table_structure["foreign_key"]:
+            attr_str += fk
+
+        query = f"ALTER TABLE {tablename} ADD FOREIGN KEY {attr_str}"
+        return query
 
     def insert_data(self, table, columns):
         attr_str = ""
